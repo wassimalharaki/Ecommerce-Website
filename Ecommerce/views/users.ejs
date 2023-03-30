@@ -1,0 +1,229 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="users.css">
+    <link rel="icon" type="image/x-icon" href="favicon.png">
+    <title>Users</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(() => {
+            fixSelect();
+        });
+        function fixSelect() {
+            var selectElements = document.getElementsByClassName('temporary');
+            for (var i = 0; i < selectElements.length; i++) {
+                var id = selectElements[i].id;
+                var id = id.slice(4, id.length);
+                if (document.getElementById('frst' + id).innerHTML == "User") {
+                    document.getElementById('scnd' + id).innerHTML = "Admin";
+                    document.getElementById('scnd' + id).value = "Admin";
+                }
+                else {
+                    document.getElementById('scnd' + id).innerHTML = "User";
+                    document.getElementById('scnd' + id).value = "User";
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <a href="/" id="home"></a>
+    <div class="container" id="container">
+        <div class="header">
+            <div class="logoImage">
+                <img class="logo" src="logo.png" alt="HomeLogo"/>
+            </div>
+            <div class="search-box">
+                <input type="text" id="search" placeholder="Search">
+                <button onclick="search()" style="border-radius: 20px; border-color: white;">
+                    <img src="search.png" width="15px" height="15px">
+                </button>
+            </div>
+            <span onclick="document.getElementById('home').click()" class="close"
+                title="Close Form">&times;
+            </span>
+        </div>
+        <div class="inbetween" style="margin-bottom: 20px; margin-top: 20px;">
+            <input type="submit" 
+                class="updateAll"
+                style="width: 200px; font-size: 24px; font-weight: 500;"
+                onclick="updateAll();"
+                value="UPDATE ALL">
+        </div>
+        <div class="tableContainer">
+            <ul class="responsive-table" id="table">
+                <li class="table-header">
+                    <div class="col col-1" id="tester">Username</div>
+                    <div class="col col-2">Name</div>
+                    <div class="col col-3">Role</div>
+                    <div class="col col-4">Phone Number</div>
+                    <div class="col col-5"></div>
+                </li>
+                <% users.forEach(function(user) { %>
+                    <li class="table-row">
+                        <div class="col col-1" 
+                            id="username<%= user.userID %>"><%= user.username %></div>
+                        <div class="col col-2" id="name<%= user.userID %>"
+                            contenteditable="true"><%= user.name %></div>
+                        <div class="col col-3">
+                            <select class="temporary" id="role<%= user.userID %>" <%= allow %>>
+                                <option id="frst<%= user.userID %>"
+                                    value="<%= user.role %>"><%= user.role %></option>
+                                <option id="scnd<%= user.userID %>"
+                                    value=""></option>
+                            </select>
+                        </div>
+                        <div class="col col-4" id="number<%= user.userID %>"
+                            contenteditable="true"><%= user.phoneNumber %></div>
+                        <div class="col col-5" data-label="Actions">
+                            <form style="text-align: center;">
+                                <input type="submit" 
+                                       class="update"
+                                       onclick="update(this);"
+                                       id="<%= user.userID %>"
+                                       value="UPDATE">
+                                <input type="submit"
+                                       class="delete"
+                                       onclick="erase(this);"
+                                       id="<%= user.userID%>"
+                                       value="DELETE">
+                            </form>
+                        </div>
+                    </li>
+                <% }); %>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function update(element) {
+            event.preventDefault();
+            var id = element.id;
+            var name = document.getElementById('name'+id).innerHTML;
+            var role = document.getElementById('role'+id).value;
+            var phoneNumber = document.getElementById('number'+id).innerHTML;
+            var updated = {
+                id: id,
+                name: name,
+                role: role,
+                phoneNumber: phoneNumber
+            };
+
+            $.ajax({
+                url: "/updateUser",
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(updated),
+                success: function(response) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'User has been updated',
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                    setTimeout(() => {
+                        updateTable(response);
+                    }, 1500);
+                }
+            })
+        }
+
+        function erase(element) {
+            event.preventDefault();
+            var id = element.id;
+            var user = {
+                id: id
+            };
+
+            $.ajax({
+                url: "/deleteUser",
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(user),
+                success: function(response) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'User has been deleted',
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                    setTimeout(() => {
+                        updateTable(response);
+                    }, 1500);
+                }
+            });
+        }
+
+        function updateAll() {
+            var updateButtons = document.getElementsByClassName('update');
+            for (var i = 0; i < updateButtons.length; i++)
+                updateButtons[i].click();
+        }
+
+        function search() {
+            var search = document.getElementById('search').value;
+            var searchObj = {
+                search: search
+            };
+            $.ajax({
+                url: "/searchUsers",
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(searchObj),
+                success: function(response) {
+                    updateTable(response);
+                }
+            });
+        }
+        
+        function updateTable(users) {
+            var table = document.getElementById('table');
+            table.innerHTML =  `<li class="table-header">
+                                    <div class="col col-1" id="tester">Username</div>
+                                    <div class="col col-2">Name</div>
+                                    <div class="col col-3">Role</div>
+                                    <div class="col col-4">Phone Number</div>
+                                    <div class="col col-5"></div>
+                                </li>`;
+
+            for (var i = 0; users.length; i++) {
+                var second = (users[i].role == "User")? "Admin" : "User";
+                var row = `<li class="table-row">
+                                <div class="col col-1"
+                                    id="username${users[i].userID}">${users[i].username}</div>
+                                <div class="col col-2" id="name${users[i].userID}"
+                                    contenteditable="true">${users[i].name}</div>
+                                <div class="col col-3">
+                                    <select class="temporary" id="role${users[i].userID}" <%= allow %>>
+                                        <option id="frst${users[i].userID}" value="${users[i].role}">${users[i].role}</option>
+                                        <option id="scnd${users[i].userID}" value="${second}">${second}</option>
+                                    </select>
+                                </div>
+                                <div class="col col-4" id="number${users[i].userID}"
+                                    contenteditable="true">${users[i].phoneNumber}</div>
+                                <div class="col col-5" data-label="Actions">
+                                    <form style="text-align: center;">
+                                        <input type="submit" 
+                                            class="update"
+                                            onclick="update(this);"
+                                            id="${users[i].userID}"
+                                            value="UPDATE">
+                                        <input type="submit"
+                                            class="delete"
+                                            onclick="erase(this);"
+                                            id="${users[i].userID}"
+                                            value="DELETE">
+                                    </form>
+                                </div>
+                            </li>`;
+                table.innerHTML += row;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,234 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="items.css">
+    <link rel="icon" type="image/x-icon" href="favicon.png">
+    <title>My Items</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function () {
+            fixItemDiv();
+        });
+
+        function fixItemDiv() {
+            var items = document.getElementsByClassName('item');
+            for (var i = 0; i < items.length; i++)
+                document.getElementById(items[i].id).style.height = '360px';
+        }
+    </script>
+</head>
+<body>
+    <a href="/" id="home"></a>
+    <div class="container">
+        <div class="header">
+            <div class="logoImage">
+                <img class="logo" src="logo.png" alt="HomeLogo"/>
+            </div>
+            <div class="search-box">
+                <input type="text" id="search" placeholder="Search">
+                <div style="display: flex; flex-direction: row;">
+                    <button title="Search Items" onclick="commands()"
+                        style="border-radius: 20px; border-color: white;
+                        width: 25px; height: 25px; margin-right: 5px;">
+                        <img src="info.png" width="15px" height="15px">
+                    </button>
+                    <button title="Search Items" onclick="search()"
+                        style="border-radius: 20px; border-color: white; width: 25px; height: 25px;">
+                        <img src="search.png" width="15px" height="15px">
+                    </button>
+                </div>
+            </div>
+            <span onclick="document.getElementById('home').click()" class="close"
+                title="Close Form">&times;
+            </span>
+        </div>
+        <div class="body bodyMyItems" id="body">
+            <% myItems.forEach(function(item) { %>
+                <div class="item" id="<%= item.itemID %>div">
+                    <img src="data:image/<%=item.itemImage.contentType%>;base64,
+					    <%=item.itemImage.data.toString('base64')%>"
+                    width="350px" height="200px" style="user-select: none;"> 
+                    <div class="twoTexts">
+                        <div class="flex">
+                            <p>Item Name:&nbsp</p>
+                            <p id="<%= item._id %>name" 
+                                contenteditable="true"><%= item.itemName %></p>
+                        </div>
+                        <div class="flex">
+                            <p>Price:&nbsp$</p>
+                            <p><%= item.itemPrice %></p>
+                        </div>
+                    </div>
+                    <div class="descriptionLabel">
+                        <label>Description:</label>
+                    </div>
+                    <div class="description">
+                        <textarea id="<%= item._id %>description"><%= item.itemDescription %></textarea>
+                    </div>
+                    <div class="buttons">
+                        <button id="<%= item._id %>" onclick="update(this);" class="delete update">
+                            UPDATE
+                        </button>
+                        <button id="<%= item._id %>" onclick="erase(this);" class="delete">
+                            DELETE
+                        </button>
+                    </div>
+                </div>
+            <% }); %>
+        </div>
+    </div>
+
+    <script>
+        function commands() {
+            Swal.fire({
+                icon: 'info',
+                title: 'Search Commands',
+                html: 'use "item-name:" to search for an item\'s name<br>'
+                    + 'use "price-max:" to search for items below a price<br>'
+                    + 'use "price-min:" to search for items above a price<br>'
+            });
+        }
+
+        function search() {
+            var search = document.getElementById('search').value;
+            var searchObj = {
+                search: search
+            };
+            $.ajax({
+                url: "/searchmyitems",
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(searchObj),
+                success: function(response) {
+                    if (response == "No items were found") {
+                        Swal.fire({
+                                icon: 'error',
+                                title: 'Search error',
+                                text: 'No items were found based on your search'
+                        });
+                        document.getElementById('body').innerHTML = ``;
+                    }
+                    else if (response == "Input not a number") {
+                        Swal.fire({
+                                icon: 'error',
+                                title: 'Search error',
+                                text: 'Input is not a number, please check again'
+                        });
+                        document.getElementById('body').innerHTML = ``;
+                    }
+                    else {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Search complete',
+                            text: 'Items were found based on your search',
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                        updateGrid(response);
+                    }
+                }
+            });
+        }
+
+        function update(element) {
+            var id = element.id;
+            var itemName = $('#' + id + 'name').text();
+            var itemDescription = document.getElementById(id + "description").value;
+            if (itemName.length == 0 || itemDescription.length == 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Update error',
+                    text: 'You can\'t leave any empty fields'
+                });
+                if (itemName.length == 0)
+                    document.getElementById(id + "name").innerHTML = "&nbsp&nbsp";
+                return;
+            }
+            var updatedItem = {
+                _id: id,
+                itemName: itemName.trim(),
+                itemDescription: itemDescription.trim()
+            }
+
+            $.ajax({
+                url: "/updateItem",
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(updatedItem),
+                success: function(response) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Update complete',
+                        text: 'Item has been updated',
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                    updateGrid(response);
+                }
+            });
+        }
+
+        function erase(element) {
+            var id = element.id;
+            var obj = {id: id};
+            $.ajax({
+                url: "/deleteMyItem",
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(obj),
+                success: function(response) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Delete complete',
+                        text: 'Item has been deleted',
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                    updateGrid(response);
+                }
+            });
+        }
+
+        function updateGrid(items) {
+            var body = document.getElementById('body');
+            body.innerHTML = ``;
+            for (var i = 0; i < items.length; i++) {
+                var item = `<div class="item" id="${items[i].itemID}div">
+                                <img src="data:image/${items[i].itemImage.contentType};base64,
+                                    ${items[i].itemImage.data}"
+                                width="350px" height="200px" style="user-select: none;"> 
+                                <div class="twoTexts">
+                                    <div class="flex">
+                                        <p>Item Name:&nbsp</p>
+                                        <p id="${items[i]._id}name" contenteditable="true">${items[i].itemName}</p>
+                                    </div>
+                                    <div class="flex">
+                                        <p>Price:&nbsp$</p>
+                                        <p>${items[i].itemPrice}</p>
+                                    </div>
+                                </div>
+                                <div class="descriptionLabel">
+                                    <label>Description:</label>
+                                </div>
+                                <div class="description">
+                                    <textarea id="${items[i]._id}description">${items[i].itemDescription}</textarea>
+                                </div>
+                                <div class="buttons">
+                                    <button id="${items[i]._id}" onclick="update(this);" class="delete update">
+                                        UPDATE
+                                    </button>
+                                    <button id="${items[i]._id}" onclick="erase(this);" class="delete">
+                                        DELETE
+                                    </button>
+                                </div>
+                            </div>`;
+                body.innerHTML += item;
+            }
+            fixItemDiv();
+        }
+    </script>
+</body>
+</html>

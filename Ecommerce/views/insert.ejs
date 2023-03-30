@@ -1,0 +1,92 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="insert.css">
+    <link rel="icon" type="image/x-icon" href="favicon.png">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <title>Insert an Item</title>
+</head>
+<body>
+    <a href="/" id="home"></a>
+    <div class="container">
+        <div class="header">
+            <div class="logoImage">
+                <img class="logo" src="logo.png" alt="HomeLogo"/>
+            </div>
+            <span onclick="document.getElementById('home').click()" class="close"
+                title="Close Form">&times;
+            </span>
+        </div>
+
+        <form action="insert" method="post" enctype="multipart/form-data" class="body">
+            <div class="bodyDiv">
+                <div class="innerHeader">
+                    Insert an Item
+                </div>
+                <div class="item">
+                    <label for="itemNameField">Item</label>
+                    <input type="text"
+                        maxlength="15"
+                        id="itemNameField"
+                        name="itemName"
+                        required/>
+                    <input type="number"
+                        maxlength="6"
+                        min="0"
+                        id="itemPriceField"
+                        name="itemPrice"
+                        required/>
+                </div>
+
+                <div class="underItem">
+                    <label class="underItemLabel"></label>
+                    <div class="underItemLeft">
+                        <p class="smallText">Item Name</p>
+                    </div>
+        
+                    <div class="underItemRight">
+                        <p class="smallText">Item Price</p>
+                    </div>
+                </div>
+
+                <div class="description">
+                    <label for="descriptionField">Item Details</label>
+                    <textarea maxlength="255"
+                        name="itemDescription"
+                        id="itemDescriptionField"
+                        required></textarea>
+                </div>
+
+                <div class="image">
+                    <label for="itemImageField">Item Image</label>
+                    <input type="file"
+                        class="exclude"
+                        id="itemImageField"
+                        name="imageItem"
+                        accept="image/*"
+                        required/>
+                </div>
+
+                <button type="submit" onclick="insert()" class="insertButton" id="insertButton">INSERT</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('insertButton').addEventListener('click', function() {
+            if (document.getElementById('itemNameField').value.trim().length != 0
+                && document.getElementById('itemPriceField').value.trim().length != 0
+                && document.getElementById('itemDescriptionField').value.trim().length != 0)
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Item has been inserted',
+                    showConfirmButton: false,
+                    background: '#F5E1FD',
+                    timer: 1500
+            })
+        })
+    </script>
+</body>
+</html>

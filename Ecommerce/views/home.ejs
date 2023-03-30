@@ -1,0 +1,492 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="home.css">
+    <link rel="icon" type="image/x-icon" href="favicon.png">
+    <title>Wassim's Market Place</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function() {
+            if (!<%= isLoggedIn %>) {
+                document.getElementById('myItems').style.display = 'none';
+                document.getElementById('myItemsLi').style.display = 'none';
+                document.getElementById('logout').style.display = 'none';
+                document.getElementById('logoutLi').style.display = 'none';
+                document.getElementById('users').style.display = 'none';
+                document.getElementById('usersLi').style.display = 'none';
+                document.getElementById('insertItem').style.display = 'none';
+                document.getElementById('insertItemLi').style.display = 'none';
+            }
+            else {  
+                document.getElementById('signup').style.display = 'none';
+                document.getElementById('signupLi').style.display = 'none';
+                document.getElementById('login').style.display = 'none';
+                document.getElementById('loginLi').style.display = 'none';
+                if ("<%= role %>" == "User") {
+                    document.getElementById('users').style.display = 'none';
+                    document.getElementById('usersLi').style.display = 'none';
+                }
+                else {
+                    document.getElementById('myItems').style.display = 'none';
+                    document.getElementById('myItemsLi').style.display = 'none';
+                    document.getElementById('insertItem').style.display = 'none';
+                    document.getElementById('insertItemLi').style.display = 'none';
+                }
+            }
+
+
+
+            $("#signupForm").submit(function(event) {
+				event.preventDefault();
+				$.ajax({
+					type: 'POST',
+					url: '/signup',
+					data: $("#signupForm").serialize(),
+					dataType: "json",
+					success: function(response) {
+                        if (response.status == "Username Taken")
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Username is taken',
+                                text: 'Choose another username'
+                            });
+                        else if (response.status == "Password Error")
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Passwords do not match',
+                                text: 'Check your password'
+                            });
+                        else if (response.status == "User Created") {
+                            $('#signupForm')[0].reset();
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: 'User has been successfully created',
+                                showConfirmButton: false,
+                                timer: 1500
+                            });
+                            setTimeout(() => {
+                                document.getElementById("home").click();
+                            }, 1500);
+                        }
+                    }
+                });
+			});
+
+
+            $("#loginForm").submit(function(event) {
+				event.preventDefault();
+				$.ajax({
+					type: 'POST',
+					url: '/login',
+					data: $("#loginForm").serialize(),
+					dataType: "json",
+					success: function(response) {
+                        if (response.status == "Invalid username or password")
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Login Failed',
+                                text: 'Invalid username or password'
+                            });
+                        else if (response.status == "Logged In") {
+                            $('#loginForm')[0].reset();
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: 'Logged in successfully',
+                                showConfirmButton: false,
+                                timer: 1500
+                            });
+                            setTimeout(() => {
+                                document.getElementById("home").click();
+                            }, 1500);
+                        }
+                    }
+                });
+			});
+        });
+
+        $(document).click(function(event) { 
+            var target = event.target.className;
+            if (target != "bento-menu" && target != "abc") 
+                document.querySelector('.dropdown').className = "dropdown";
+        });
+    </script>
+</head>
+
+<body> 
+    <div id="redirects">
+        <a href="/" id="home"></a>
+        <a href="/logout" id="logoutA"></a>
+        <a href="/myitems" id="myitemsA"></a>
+        <a href="/users" id="usersA"></a>
+        <a href="/insert" id="insertItemA"></a>
+    </div>
+    
+    <!------------------------------- SIGN UP FORM --------------------------------->
+    <div id="parentDivSignup" class="parent">
+        <div class="header" id="headerS">
+            <div class="logoImage">
+                <img class="logo" src="logo.png" alt="HomeLogo" />
+            </div>
+        </div>
+        <span id="plzwork" onclick="document.getElementById('parentDivSignup').style.display='none'" class="close"
+            title="Close Form">&times;
+        </span>
+        <form method="post" id="signupForm" action="/signup" class="userForm">
+            <div class="userContainer">
+                <div class="userHeader">
+                    <h1>Sign Up</h1>
+                    <p>Please fill in this form to create an account.</p>
+                </div>
+                <hr>
+                <label for="usernameSignup"><b>Username</b></label>
+                <input class="usernameSignup" type="text" placeholder="Enter Username" name="usernameSignup" required>
+
+                <label for="nameSignup"><b>Name</b></label>
+                <input class="nameSignup" type="text" placeholder="Enter Name" name="nameSignup" required>
+
+                <label for="numberSignup"><b>Phone Number</b></label>
+                <input class="numberSignup" type="number" maxlength="8" placeholder="Enter phone number" name="numberSignup" required>
+
+                <label for="passwordSignup"><b>Password</b></label>
+                <input class="passwordSignup" type="password" placeholder="Enter Password" name="passwordSignup"
+                    required>
+
+                <label for="passwordRSignup"><b>Repeat Password</b></label>
+                <input class="passwordRSignup" type="password" placeholder="Repeat Password" name="passwordRSignup"
+                    required>
+
+                <div class="clearfix">
+                    <button type="button" onclick="document.getElementById('parentDivSignup').style.display='none'"
+                        class="cancel">Cancel</button>
+                    <button type="submit" class="signupBtn">Sign Up</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!------------------------------- LOG IN FORM ---------------------------------->
+    <div id="parentDivLogin" class="parent">
+        <div class="header" id="headerL">
+            <div class="logoImage">
+                <img class="logo" src="logo.png" alt="HomeLogo" />
+            </div>
+        </div>
+        <span onclick="document.getElementById('parentDivLogin').style.display='none'" class="close"
+            title="Close Form">&times;
+        </span>
+        <form id="loginForm" class="userForm">
+            <div class="userContainer">
+                <div class="userHeader">
+                    <h1>Log in</h1>
+                    <p>Enter your username and password to log in.</p>
+                </div>
+                <hr>
+                <label for="usernameLogin"><b>Username</b></label>
+                <input class="usernameLogin" type="text" placeholder="Enter Username" name="usernameLogin" required>
+
+                <label for="passwordLogin"><b>Password</b></label>
+                <input class="passwordLogin" type="password" placeholder="Enter Password" name="passwordLogin" required>
+
+                <div class="clearfix">
+                    <button type="button" onclick="document.getElementById('parentDivLogin').style.display='none'"
+                        class="cancel">Cancel</button>
+                    <button type="submit" class="loginBtn">Log In</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!--------------------------------- ABOUT US ----------------------------------->
+    <div id="parentDivAbout" class="parent">
+        <div class="header" id="headerA">
+            <div class="logoImage">
+                <img class="logo" src="logo.png" alt="HomeLogo" />
+            </div>
+        </div>
+        <span onclick="document.getElementById('parentDivAbout').style.display='none'" class="close"
+            title="Close Form">&times;
+        </span>
+        <div class="innerAboutContainer">
+            <div class="leftBody">
+
+
+                <div class="img">
+                    <img src="pic.png">
+                </div>
+
+                <div class="nameLeft">
+                    <p>
+                        Wassim Al Haraki
+                    </p>
+                </div>
+
+                <div class="address">
+                    <p class="regular">
+                        Main road
+                        <br>Kaifun
+                        <br>Lebanon
+                    </p>
+                </div>
+
+                <div class="contact">
+                    <p class="regular">
+                        Tel 78-945-924
+                        <br>wassimalharaki@gmail.com
+                        <br>www.wassimalharaki.com
+                    </p>
+                </div>
+
+                <div>
+                    <div class="socials">
+                        <img src="skype.png" class="socialsIcons">
+                        <label class="regular">WassimAlHaraki</label>
+                    </div>
+                    <div class="socials">
+                        <img src="linkedin.png" class="socialsIcons">
+                        <label class="regular">WassimAlHaraki</label>
+                    </div>
+                    <div class="socials">
+                        <img src="fb.png" class="socialsIcons">
+                        <label class="regular">WassimAlHaraki</label>
+                    </div>
+                    <div class="socials">
+                        <img src="twitter.png" class="socialsIcons">
+                        <label class="regular">WassimAlHaraki</label>
+                    </div>
+                    <div class="socials">
+                        <img src="ig.png" class="socialsIcons">
+                        <label class="regular">WassimAlHaraki</label>
+                    </div>
+                </div>
+
+                <div class="lowerLeftHalf">
+                    <div class="line">
+                        <hr class="hLine">
+                    </div>
+
+                    <div class="codingLangs">
+                        <p class="titles">Design & Coding</p>
+                        <p class="big">Java, C++</p>
+                        <p class="big">HTML, CSS</p>
+                        <p class="big">JavaScript, SQL</p>
+                        <p class="big">Visual Studio</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="rightBody">
+                <div class="rightHeader">
+
+                    <p class="huge">Wassim Al Haraki</p>
+                    <p class="hugemm">Backend Developer with a keen eye for detail</p>
+                </div>
+
+                <div class="profile">
+                    <p class="titles2">Profile</p>
+                    <p class="regular">
+                        Passionate backend engineer with 2 months of hands-on
+                        experience in developing scalable websites/applications
+                        using a wide range of front-end and back-end skills linked
+                        HTML, CSS, Python, JavaScript, etc. Developed 10+ websites
+                        from scratch.
+                        <br>
+                        <br>Looking to further enahcne HTML5, CSS3, and JS skills
+                        as the future backend developer.
+                    </p>
+                </div>
+
+                <hr class="hLine">
+
+                <div class="education">
+                    <p class="titles2">Education</p>
+                    <div class="doubleText">
+                        <div class="leftText">
+                            <p class="subtitles">Computer Science / University of Balamand</p>
+                        </div>
+                        <div class="rightText">
+                            <p class="lowAlpha">Nov 2022 - currently studying</p>
+                        </div>
+                    </div>
+                    <ul class="unordlist" style="margin-top: 35px;">
+                        <li class="listitem">Second year student with decent academy remarks.</li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+
+    <!----------------------------------- MAIN ------------------------------------->
+    <div class="container" id="container">
+        <div class="header">
+            <div class="logoImage">
+                <img class="logo" src="logo.png" alt="HomeLogo" />
+            </div>
+            <ul class="nav">
+                <div class="benoto">
+                    <div class="bento-menu">
+                        <span class="abc"></span>
+                        <span class="abc"></span>
+                        <span class="abc"></span>
+                        <span class="abc"></span>
+                        <span class="abc"></span>
+                        <span class="abc"></span>
+                        <span class="abc"></span>
+                        <span class="abc"></span>
+                        <span class="abc"></span>
+                    </div>
+                    <ul class="dropdown">
+                        <li id="insertItemLi"><button onclick="document.getElementById('insertItemA').click()"
+                            class="dropdownItem">Insert Item</button></li>
+                        <li id="usersLi"><button onclick="document.getElementById('usersA').click()"
+                            class="dropdownItem">Users</button></li>
+                        <li id="signupLi"><button onclick="displaySignup()" 
+                            class="dropdownItem">Sign Up</button></li>
+                        <li id="loginLi"><button onclick="displayLogin()" 
+                            class="dropdownItem">Log In</button></li>
+                        <li id="myItemsLi"><button onclick="document.getElementById('myitemsA').click()"
+                            class="dropdownItem">My Items</button></li>
+                        <li id="logoutLi"><button id="logoutDropdown"
+                            class="dropdownItem">Logout</button></li>
+                        <li><button onclick="displayAboutUs()" 
+                            class="dropdownItem">About Us</button></li>
+                    </ul>
+                </div>
+            </ul>
+            <div class="menu">
+                <button onclick="document.getElementById('insertItemA').click()"
+                    class="menuItem" id="insertItem">Insert Item</button>
+                <button onclick="document.getElementById('usersA').click()"
+                    class="menuItem" id="users">Users</button>
+                <button onclick="displaySignup()" class="menuItem" id="signup">Sign
+                    Up</button>
+                <button onclick="displayLogin()" class="menuItem" id="login">Log
+                    In</button>
+                <button onclick="document.getElementById('myitemsA').click()"
+                    class="menuItem" id="myItems">My Items</button>
+                <button class="menuItem" id="logout">Logout</button>
+                <button onclick="displayAboutUs()" class="menuItem" id="aboutUs">About
+                    Us</button>
+            </div>
+        </div>
+
+        <div class="body">
+            <form action="/browseitems" method="get">
+                <div class="innerBody" style="display: flex; flex-direction: column; align-items: center;">
+                    <p class="slogan" id="slogan">
+                        <marquee behavior="slide" direction="left" scrollamount="70">
+                            Whatever it is, you can get it on Wassim's Market Place
+                        </marquee>
+                    </p>
+                    <div style="width: fit-content;">
+                        <p class="minislogan">
+                            <marquee behavior="slide" direction="right" scrollamount="23">
+                                Buy it, sell it, love it
+                            </marquee>
+                        </p>
+                    </div>
+                    <button class="browse">Start Browsing</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+
+    <script>
+        //LOGOUT FUNCTION
+        document.getElementById('logoutDropdown').addEventListener('click', () => {
+            event.preventDefault();
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: 'Logged out successfully',
+                showConfirmButton: false,
+                timer: 1500
+            });
+            setTimeout(() => {
+                document.getElementById('logoutA').click();
+            }, 1500);
+        });
+        document.getElementById('logout').addEventListener('click', () => {
+            event.preventDefault();
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: 'Logged out successfully',
+                showConfirmButton: false,
+                timer: 1500
+            });
+            setTimeout(() => {
+                document.getElementById('logoutA').click();
+            }, 1500);
+        });
+
+
+        //BENOTO MENU
+        var benoto = document.querySelector('.benoto'),
+        dropdown = document.querySelector('.dropdown');
+        
+        benoto.addEventListener('click', function() {
+            dropdown.classList.toggle('active');
+        });
+
+        // SIGN UP FORM
+        var headerS = document.getElementById('headerS');
+        var parentSignup = document.getElementById('parentDivSignup');
+
+        function displaySignup() {
+            event.preventDefault();
+            headerS.style.position = 'absolute';
+            headerS.style.top = '0';
+            headerS.style.left = '0';
+            parentSignup.style.display = 'block';
+        }
+
+        // LOG IN FORM
+        var headerL = document.getElementById('headerL');
+        var parentLogin = document.getElementById('parentDivLogin');
+
+        function displayLogin() {
+            event.preventDefault();
+            headerL.style.position = 'absolute';
+            headerL.style.top = '0';
+            headerL.style.left = '0';
+            parentLogin.style.display = 'block';
+        }
+
+        // ABOUT US PAGE
+        var headerA = document.getElementById('headerA');
+        var parentAbout = document.getElementById('parentDivAbout');
+
+        function displayAboutUs() {
+            event.preventDefault();
+            headerA.style.position = 'absolute';
+            headerA.style.top = '0';
+            headerA.style.left = '0';
+            parentAbout.style.display = 'flex';
+        }
+
+
+        window.onclick = function (event) {
+            if (event.target == parentSignup)
+                parentSignup.style.display = "none";
+            else if (event.target == parentLogin)
+                parentLogin.style.display = "none";
+            else if (event.target == parentAbout)
+                parentAbout.style.display = "none";
+        }
+
+    </script>
+</body>
+
+</html>
